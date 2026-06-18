@@ -1,0 +1,27 @@
+# OS / editors
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# .NET
+bin/
+obj/
+TestResults/
+artifacts/
+publish/
+Connector.Installer/Payload/
+
+# User-specific
+*.user
+*.suo

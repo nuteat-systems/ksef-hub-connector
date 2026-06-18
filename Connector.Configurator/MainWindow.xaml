@@ -1,0 +1,127 @@
+<Window x:Class="Connector.Configurator.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="KSeF Hub Connector - konfiguracja"
+        Width="760"
+        Height="600"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel>
+            <TextBlock FontSize="22" FontWeight="SemiBold" Text="KSeF Hub Connector" />
+            <TextBlock Margin="0,6,0,0"
+                       TextWrapping="Wrap"
+                       Foreground="#5A6475"
+                       Text="Wprowadź dane połączenia, kliknij Zapisz, wykonaj test gRPC oraz test SQL, a na końcu uruchom ponownie usługę." />
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,14,0,14">
+            <StackPanel>
+                <TextBlock FontSize="16" FontWeight="SemiBold" Text="Serwer gRPC" Margin="0,0,0,8" />
+                <Grid Margin="0,0,0,14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="220" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="Adres serwera" Margin="0,6,8,6" />
+                    <TextBox x:Name="ServerAddressTextBox" Grid.Column="1" Margin="0,4,0,4" />
+
+                    <TextBlock Grid.Row="1" Text="Connector ID" Margin="0,6,8,6" />
+                    <TextBox x:Name="ConnectorIdTextBox" Grid.Row="1" Grid.Column="1" Margin="0,4,0,4" />
+
+                    <TextBlock Grid.Row="2" Text="Access token" Margin="0,6,8,6" />
+                    <TextBox x:Name="AccessTokenTextBox" Grid.Row="2" Grid.Column="1" Margin="0,4,0,4" />
+
+                </Grid>
+
+                <TextBlock FontSize="16" FontWeight="SemiBold" Text="MS SQL" Margin="0,0,0,8" />
+                <Grid Margin="0,0,0,14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="220" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="Host" Margin="0,6,8,6" />
+                    <Grid Grid.Column="1" Margin="0,4,0,4">
+                        <ComboBox x:Name="DbHostComboBox" IsEditable="True" />
+                    </Grid>
+
+                    <TextBlock Grid.Row="1" Text="Port" Margin="0,6,8,6" />
+                    <TextBox x:Name="DbPortTextBox" Grid.Row="1" Grid.Column="1" Margin="0,4,0,4" />
+
+                    <TextBlock Grid.Row="2" Text="Baza Wapro Mag" Margin="0,6,8,6" />
+                    <Grid Grid.Row="2" Grid.Column="1" Margin="0,4,0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <ComboBox x:Name="DbWaproMagComboBox" IsEditable="True" />
+                        <Button Grid.Column="1"
+                                Margin="8,0,0,0"
+                                Padding="10,2"
+                                Content="Pobierz bazy"
+                                Click="LoadDatabasesButton_Click" />
+                    </Grid>
+
+                    <TextBlock Grid.Row="3" Text="Baza Wapro Fakir" Margin="0,6,8,6" />
+                    <ComboBox x:Name="DbWaproFakirComboBox" Grid.Row="3" Grid.Column="1" IsEditable="True" Margin="0,4,0,4" />
+
+                    <CheckBox x:Name="IntegratedSecurityCheckBox"
+                              Grid.Row="4"
+                              Grid.ColumnSpan="2"
+                              Margin="0,6,0,0"
+                              Content="Windows Integrated Security"
+                              Checked="IntegratedSecurityCheckBox_Changed"
+                              Unchecked="IntegratedSecurityCheckBox_Changed" />
+
+                    <TextBlock Grid.Row="5" Text="Użytkownik SQL" Margin="0,6,8,6" />
+                    <TextBox x:Name="DbUserTextBox" Grid.Row="5" Grid.Column="1" Margin="0,4,0,4" />
+
+                    <TextBlock Grid.Row="6" Text="Hasło SQL" Margin="0,6,8,6" />
+                    <PasswordBox x:Name="DbPasswordBox" Grid.Row="6" Grid.Column="1" Margin="0,4,0,4" />
+                </Grid>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Border Grid.Row="2"
+                Padding="10,8"
+                Margin="0,0,0,8"
+                CornerRadius="6"
+                Background="#FFF4EACB"
+                BorderBrush="#FFB58A00"
+                BorderThickness="1">
+            <TextBlock x:Name="StatusTextBlock"
+                       FontWeight="SemiBold"
+                       Foreground="#FF5E4500"
+                       Text="Status: gotowe" />
+        </Border>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal">
+            <Button Content="Test gRPC" Width="120" Height="36" Margin="0,0,8,0" Click="TestGrpcButton_Click" />
+            <Button Content="Test SQL" Width="120" Height="36" Margin="0,0,8,0" Click="TestSqlButton_Click" />
+            <Button Content="Zapisz" Width="120" Height="36" Margin="0,0,8,0" Click="SaveButton_Click" />
+            <Button Content="Restart usługi" Width="150" Height="36" Click="RestartServiceButton_Click" />
+        </StackPanel>
+    </Grid>
+</Window>

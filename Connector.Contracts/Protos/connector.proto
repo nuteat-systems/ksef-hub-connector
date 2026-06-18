@@ -1,0 +1,76 @@
+syntax = "proto3";
+
+option csharp_namespace = "Connector.Contracts.Grpc";
+
+package connector;
+
+service ConnectorGateway {
+  rpc Connect(stream ClientMessage) returns (stream ServerMessage);
+}
+
+message ClientMessage {
+  oneof payload {
+    ClientHello hello = 1;
+    Heartbeat heartbeat = 2;
+    DbCommandResult db_result = 3;
+  }
+}
+
+message ServerMessage {
+  oneof payload {
+    Ack ack = 1;
+    DbCommandRequest db_request = 2;
+  }
+}
+
+message ClientHello {
+  string connector_id = 1;
+  string machine_name = 2;
+  string version = 3;
+}
+
+message Heartbeat {
+  int64 unix_time_seconds = 1;
+}
+
+message Ack {
+  string message = 1;
+}
+
+enum DbCommandType {
+  DB_COMMAND_TYPE_UNSPECIFIED = 0;
+  DB_COMMAND_TYPE_SELECT = 1;
+  DB_COMMAND_TYPE_NON_QUERY = 2;
+  DB_COMMAND_TYPE_STORED_PROCEDURE = 3;
+}
+
+enum TargetDatabase {
+  TARGET_DATABASE_UNSPECIFIED = 0;
+  TARGET_DATABASE_WAPRO_MAG = 1;
+  TARGET_DATABASE_WAPRO_FAKIR = 2;
+}
+
+message DbParameter {
+  string name = 1;
+  string value = 2;
+  bool is_null = 3;
+}
+
+message DbCommandRequest {
+  string request_id = 1;
+  DbCommandType command_type = 2;
+  string command_text = 3;
+  repeated DbParameter parameters = 4;
+  TargetDatabase target_database = 5;
+  string session_id = 6;
+  bool close_session = 7;
+}
+
+message DbCommandResult {
+  string request_id = 1;
+  bool success = 2;
+  string payload_json = 3;
+  int32 rows_affected = 4;
+  string error_message = 5;
+  repeated string result_sets_json = 6;
+}
