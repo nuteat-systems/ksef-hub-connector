@@ -17,13 +17,15 @@ Lokalny konektor Windows dla [KSeF Hub](https://ksefhub.app) — łączy SaaS z 
 
 ## Instalacja (użytkownik końcowy)
 
-Pobierz `KSeFHubConnectorSetup.exe` z [GitHub Releases](https://github.com/OWNER/ksef-hub-connector/releases) i uruchom jako administrator.
+Pobierz `KSeFHubConnectorSetup.exe` z [GitHub Releases](https://github.com/nuteat-systems/ksef-hub-connector/releases) i uruchom jako administrator.
 
 Konfiguracja zapisywana jest w:
 
 `%ProgramData%\KSeFHub\Connector\connector.settings.json`
 
 Hasło SQL i token dostępu są szyfrowane DPAPI (`LocalMachine`).
+
+Official Windows installers are code-signed through the [SignPath Foundation](https://signpath.org/) open-source program (publisher: SignPath Foundation). Details: [SIGNING.md](./SIGNING.md).
 
 ## Konfiguracja
 
@@ -66,7 +68,7 @@ Instalator:
 - **Open source signing:** [SIGNING.md](./SIGNING.md) (SignPath Foundation).
 - **Maintainerzy:** [RELEASING.md](./RELEASING.md).
 
-Gotowy EXE **nie jest commitowany** do repozytorium.
+Gotowy instalator (`KSeFHubConnectorSetup.exe`) **nie jest commitowany** do repozytorium — jest budowany w GitHub Actions i publikowany wyłącznie w [GitHub Releases](https://github.com/nuteat-systems/ksef-hub-connector/releases).
 
 ## Licencja
 
