@@ -70,6 +70,14 @@ Instalator:
 
 Gotowy instalator (`KSeFHubConnectorSetup.exe`) **nie jest commitowany** do repozytorium — jest budowany w GitHub Actions i publikowany wyłącznie w [GitHub Releases](https://github.com/nuteat-systems/ksef-hub-connector/releases).
 
+## Maintainer
+
+This open-source project is maintained by:
+
+**Grzegorz Jezierski**
+
+Contact: grzesiek0012@gmail.com
+
 ## Licencja
 
 MIT — zobacz [LICENSE](./LICENSE).
