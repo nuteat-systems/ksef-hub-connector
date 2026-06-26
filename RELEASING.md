@@ -1,61 +1,57 @@
-# Publikacja i osobne repozytorium
+# Publikacja release
 
-Ten katalog jest przygotowany jako **samodzielne repozytorium open source**. Gotowy instalator **nie trafia do gita** — tylko do GitHub Releases po zbudowaniu w CI.
+Gotowy instalator **nie trafia do gita** — tylko do [GitHub Releases](https://github.com/nuteat-systems/ksef-hub-connector/releases). Podpis odbywa się lokalnie certyfikatem Certum SimplySign (szczegóły: [SIGNING.md](./SIGNING.md)).
 
-## 1. Utwórz repo na nowym koncie GitHub
-
-1. Zaloguj się na **nowe konto** GitHub (dedykowane dla OSS konektora).
-2. Utwórz publiczne repo, np. `ksef-hub-connector`.
-3. Włącz **2FA** na koncie (wymagane m.in. przez SignPath Foundation).
-
-## 2. Wypchnij kod (pierwszy raz)
-
-W PowerShell, z katalogu `Connector` (ten folder = root nowego repo):
-
-```powershell
-git init
-git add .
-git commit -m "Initial release: KSeF Hub Connector 1.0.0"
-git branch -M main
-git remote add origin https://github.com/TWOJE-KONTO/ksef-hub-connector.git
-git push -u origin main
-```
-
-## 3. Pierwszy release 1.0.0
-
-```powershell
-git tag v1.0.0
-git push origin v1.0.0
-```
-
-Workflow `.github/workflows/release.yml` zbuduje `KSeFHubConnectorSetup.exe` i dołączy go do GitHub Release.
-
-Adres pobrania będzie w formie:
-
-`https://github.com/TWOJE-KONTO/ksef-hub-connector/releases/download/v1.0.0/KSeFHubConnectorSetup.exe`
-
-## 4. Podpis certyfikatem open source (SignPath)
-
-Szczegóły: [SIGNING.md](./SIGNING.md)
-
-Skrót:
-
-1. Złóż wniosek do [SignPath Foundation](https://signpath.org/).
-2. Podaj URL publicznego repo i licencję MIT.
-3. Skonfiguruj **GitHub Actions** jako trusted build system.
-4. Po zatwierdzeniu — podpisuj każdy release z CI (nie lokalny EXE z laptopa).
-
-## 5. Integracja z KSeF Hub (SaaS)
-
-W głównym projekcie ustaw URL instalatora na release z nowego repo, np. zmienną środowiskową:
-
-`NEXT_PUBLIC_CONNECTOR_INSTALLER_URL=https://github.com/TWOJE-KONTO/ksef-hub-connector/releases/download/v1.0.0/KSeFHubConnectorSetup.exe`
-
-Po podpisaniu binarium przez SignPath użytkownicy Windows zobaczą wydawcę **SignPath Foundation**.
-
-## 6. Co aktualizować przy kolejnych wersjach
+## 1. Przygotowanie wersji
 
 1. Podnieś wersję w `Directory.Build.props`.
 2. Dodaj wpis w `CHANGELOG.md`.
-3. Commit, tag `v1.x.x`, push taga.
-4. Zweryfikuj artefakt w GitHub Releases (i podpis, jeśli skonfigurowany).
+3. Commit na `main` i push:
+
+```powershell
+git add Directory.Build.props CHANGELOG.md
+git commit -m "Release 1.x.x"
+git push origin main
+```
+
+## 2. Tag i build w CI
+
+```powershell
+git tag v1.x.x
+git push origin v1.x.x
+```
+
+Workflow `.github/workflows/release.yml` zbuduje `KSeFHubConnectorSetup.exe` i utworzy GitHub Release z **niepodpisanym** plikiem.
+
+Adres pobrania (przykład dla `v1.0.0`):
+
+`https://github.com/nuteat-systems/ksef-hub-connector/releases/download/v1.0.0/KSeFHubConnectorSetup.exe`
+
+## 3. Podpis i podmiana assetu
+
+1. Zaloguj się w **SimplySign Desktop** (ikona w zasobniku).
+2. Zbuduj z tego samego taga i podpisz — pełna procedura w [SIGNING.md](./SIGNING.md).
+3. W GitHub Releases usuń niepodpisany EXE i wgraj podpisany (lub `gh release upload ... --clobber`).
+
+**Ważne:** nie pushuj ponownie tego samego taga — CI nadpisze podpisany plik.
+
+## 4. Integracja z KSeF Hub (SaaS)
+
+W głównym projekcie ustaw URL instalatora, np.:
+
+`NEXT_PUBLIC_CONNECTOR_INSTALLER_URL=https://github.com/nuteat-systems/ksef-hub-connector/releases/download/v1.0.0/KSeFHubConnectorSetup.exe`
+
+Przy nowej wersji zmień segment `v1.0.0` na aktualny tag.
+
+## 5. Checklist po release
+
+- [ ] Asset w Releases jest podpisany (`signtool verify` na pobranym pliku)
+- [ ] Wydawca: Open Source Developer Grzegorz Jezierski
+- [ ] URL w KSeF Hub wskazuje na właściwy tag
+- [ ] Opis release na GitHubie wspomina o podpisie (opcjonalnie)
+
+## Maintainer
+
+**Grzegorz Jezierski** — grzesiek0012@gmail.com
+
+Repozytorium: https://github.com/nuteat-systems/ksef-hub-connector

@@ -25,7 +25,7 @@ Konfiguracja zapisywana jest w:
 
 Hasło SQL i token dostępu są szyfrowane DPAPI (`LocalMachine`).
 
-Official Windows installers are code-signed through the [SignPath Foundation](https://signpath.org/) open-source program (publisher: SignPath Foundation). Details: [SIGNING.md](./SIGNING.md).
+Instalator Windows jest podpisany certyfikatem [Certum Open Source Code Signing](https://www.certum.pl/pl/certyfikat-code-signing/) (wydawca: **Open Source Developer Grzegorz Jezierski**). Szczegóły: [SIGNING.md](./SIGNING.md).
 
 ## Konfiguracja
 
@@ -64,9 +64,9 @@ Instalator:
 
 ## Publikacja i podpis
 
-- **Release:** tag `v1.0.0` → GitHub Actions buduje instalator i publikuje w Releases.
-- **Open source signing:** [SIGNING.md](./SIGNING.md) (SignPath Foundation).
-- **Maintainerzy:** [RELEASING.md](./RELEASING.md).
+- **Release:** tag `v*.*.*` → GitHub Actions buduje instalator i publikuje w [Releases](https://github.com/nuteat-systems/ksef-hub-connector/releases).
+- **Podpis:** maintainer podpisuje instalator lokalnie (Certum SimplySign + `signtool`) i podmienia plik w Releases — [SIGNING.md](./SIGNING.md).
+- **Procedura maintainera:** [RELEASING.md](./RELEASING.md).
 
 Gotowy instalator (`KSeFHubConnectorSetup.exe`) **nie jest commitowany** do repozytorium — jest budowany w GitHub Actions i publikowany wyłącznie w [GitHub Releases](https://github.com/nuteat-systems/ksef-hub-connector/releases).
 
