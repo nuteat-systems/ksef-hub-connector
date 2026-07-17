@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-07-17
+
 ### Added
 
 - Idle TTL for sticky SQL sessions (`Connector:SqlSessionIdleTimeoutSeconds`, default 900). Idle sessions are closed automatically on the next DB request sweep.
@@ -35,4 +37,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Access token is no longer stored in plain text in `connector.settings.json`.
 - Legacy plain-text tokens are migrated automatically on load and removed on save.
 
-[1.0.0]: https://github.com/OWNER/ksef-hub-connector/releases/tag/v1.0.0
+[1.0.1]: https://github.com/nuteat-systems/ksef-hub-connector/releases/tag/v1.0.1
+[1.0.0]: https://github.com/nuteat-systems/ksef-hub-connector/releases/tag/v1.0.0
