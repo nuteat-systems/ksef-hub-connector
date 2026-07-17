@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [1.0.1] - 2026-07-17
+
+### Added
+
+- Idle TTL for sticky SQL sessions (`Connector:SqlSessionIdleTimeoutSeconds`, default 900). Idle sessions are closed automatically on the next DB request sweep.
+- Best-effort `ROLLBACK` when closing a SQL session (`IF @@TRANCOUNT > 0`) so dropped Hub sessions do not leave open FAKIR/MAG transactions.
+- Unit tests for SQL session idle tracking (`SqlSessionIdleTracker`).
+
 ## [1.0.0] - 2026-06-18
 
 ### Added
@@ -27,4 +37,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Access token is no longer stored in plain text in `connector.settings.json`.
 - Legacy plain-text tokens are migrated automatically on load and removed on save.
 
-[1.0.0]: https://github.com/OWNER/ksef-hub-connector/releases/tag/v1.0.0
+[1.0.1]: https://github.com/nuteat-systems/ksef-hub-connector/releases/tag/v1.0.1
+[1.0.0]: https://github.com/nuteat-systems/ksef-hub-connector/releases/tag/v1.0.0
