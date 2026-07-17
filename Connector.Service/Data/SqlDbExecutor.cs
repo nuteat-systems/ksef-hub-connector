@@ -16,6 +16,7 @@ public sealed class SqlDbExecutor : IDbExecutor, IAsyncDisposable
     private readonly ILogger<SqlDbExecutor> _logger;
     private readonly SqlCommandValidator _commandValidator;
     private readonly bool _trustBackendCommands;
+    private readonly SqlSessionIdleTracker _sessionIdleTracker;
     private readonly ConcurrentDictionary<string, SqlConnection> _sessions = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, SemaphoreSlim> _sessionLocks = new(StringComparer.Ordinal);
 
@@ -23,6 +24,15 @@ public sealed class SqlDbExecutor : IDbExecutor, IAsyncDisposable
         SettingsStore settingsStore,
         ILogger<SqlDbExecutor> logger,
         IConfiguration configuration)
+        : this(settingsStore, logger, configuration, timeProvider: null)
+    {
+    }
+
+    internal SqlDbExecutor(
+        SettingsStore settingsStore,
+        ILogger<SqlDbExecutor> logger,
+        IConfiguration configuration,
+        TimeProvider? timeProvider)
     {
         _settingsStore = settingsStore;
         _logger = logger;
@@ -31,6 +41,9 @@ public sealed class SqlDbExecutor : IDbExecutor, IAsyncDisposable
             configuration.GetSection("SqlSecurity:AllowedSelectObjects").Get<string[]>() ?? Array.Empty<string>(),
             configuration.GetSection("SqlSecurity:AllowedStoredProcedures").Get<string[]>() ?? Array.Empty<string>(),
             configuration.GetValue<bool>("SqlSecurity:AllowNonQuery"));
+        var idleTimeout = SqlSessionIdleTracker.ResolveIdleTimeout(
+            configuration.GetValue<int?>("Connector:SqlSessionIdleTimeoutSeconds"));
+        _sessionIdleTracker = new SqlSessionIdleTracker(idleTimeout, timeProvider);
     }
 
     public async Task<DbExecutionResult> ExecuteAsync(DbCommandRequest request, CancellationToken cancellationToken)
@@ -40,6 +53,8 @@ public sealed class SqlDbExecutor : IDbExecutor, IAsyncDisposable
         {
             return await ExecuteCoreAsync(request, useSession: false, cancellationToken);
         }
+
+        await SweepIdleSessionsAsync(cancellationToken);
 
         var sessionLock = _sessionLocks.GetOrAdd(request.SessionId, _ => new SemaphoreSlim(1, 1));
         await sessionLock.WaitAsync(cancellationToken);
@@ -115,7 +130,7 @@ public sealed class SqlDbExecutor : IDbExecutor, IAsyncDisposable
                     command.Parameters.AddWithValue(parameter.Name, parameter.IsNull ? DBNull.Value : parameter.Value);
                 }
 
-                return commandType switch
+                var result = commandType switch
                 {
                     1 => await ExecuteReaderCommandAsync(command, cancellationToken),
                     2 => await ExecuteNonQueryCommandAsync(command, cancellationToken),
@@ -126,6 +141,13 @@ public sealed class SqlDbExecutor : IDbExecutor, IAsyncDisposable
                         ErrorMessage = $"Unsupported command type: {request.CommandType}"
                     }
                 };
+
+                if (useSession && result.Success)
+                {
+                    _sessionIdleTracker.Touch(request.SessionId);
+                }
+
+                return result;
             }
             finally
             {
@@ -161,6 +183,7 @@ public sealed class SqlDbExecutor : IDbExecutor, IAsyncDisposable
 
         if (_sessions.TryGetValue(sessionId, out var existing) && existing.State == ConnectionState.Open)
         {
+            _sessionIdleTracker.Touch(sessionId);
             return existing;
         }
 
@@ -171,18 +194,73 @@ public sealed class SqlDbExecutor : IDbExecutor, IAsyncDisposable
             connection,
             (_, previous) =>
             {
-                try
-                {
-                    previous.Dispose();
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogDebug(ex, "Failed to dispose previous SQL session connection {SessionId}", sessionId);
-                }
-
+                // Sync callback — best-effort rollback + dispose of the replaced connection.
+                SqlSessionConnectionCloser.CloseAsync(previous, sessionId, _logger)
+                    .GetAwaiter()
+                    .GetResult();
                 return connection;
             });
+        _sessionIdleTracker.Touch(sessionId);
         return connection;
+    }
+
+    private async Task SweepIdleSessionsAsync(CancellationToken cancellationToken)
+    {
+        foreach (var sessionId in _sessionIdleTracker.GetIdleSessionIds())
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (!_sessionLocks.TryGetValue(sessionId, out var sessionLock))
+            {
+                _logger.LogInformation(
+                    "Closing idle SQL session {SessionId} after {IdleTimeout}",
+                    sessionId,
+                    _sessionIdleTracker.IdleTimeout);
+                await CloseSessionAsync(sessionId);
+                continue;
+            }
+
+            if (!await sessionLock.WaitAsync(0, cancellationToken))
+            {
+                // Session is busy — skip this sweep pass.
+                continue;
+            }
+
+            var disposeLock = false;
+            try
+            {
+                if (!_sessionIdleTracker.GetIdleSessionIds().Contains(sessionId, StringComparer.Ordinal))
+                {
+                    continue;
+                }
+
+                _logger.LogInformation(
+                    "Closing idle SQL session {SessionId} after {IdleTimeout}",
+                    sessionId,
+                    _sessionIdleTracker.IdleTimeout);
+                await CloseSessionAsync(sessionId);
+                disposeLock = true;
+            }
+            finally
+            {
+                if (disposeLock)
+                {
+                    if (_sessionLocks.TryRemove(sessionId, out var removedLock) &&
+                        ReferenceEquals(removedLock, sessionLock))
+                    {
+                        removedLock.Dispose();
+                    }
+                    else
+                    {
+                        sessionLock.Release();
+                    }
+                }
+                else
+                {
+                    sessionLock.Release();
+                }
+            }
+        }
     }
 
     private async Task CloseSessionAsync(string sessionId)
@@ -192,19 +270,15 @@ public sealed class SqlDbExecutor : IDbExecutor, IAsyncDisposable
             return;
         }
 
+        _sessionIdleTracker.Remove(sessionId);
+
         if (!_sessions.TryRemove(sessionId, out var connection))
         {
             return;
         }
 
-        try
-        {
-            await connection.DisposeAsync();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogDebug(ex, "Failed to close SQL session {SessionId}", sessionId);
-        }
+        _logger.LogDebug("Closing SQL session {SessionId}", sessionId);
+        await SqlSessionConnectionCloser.CloseAsync(connection, sessionId, _logger);
     }
 
     private static async Task<DbExecutionResult> ExecuteNonQueryCommandAsync(SqlCommand command, CancellationToken cancellationToken)

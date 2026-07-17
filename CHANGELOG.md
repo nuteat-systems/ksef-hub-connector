@@ -5,6 +5,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Idle TTL for sticky SQL sessions (`Connector:SqlSessionIdleTimeoutSeconds`, default 900). Idle sessions are closed automatically on the next DB request sweep.
+- Best-effort `ROLLBACK` when closing a SQL session (`IF @@TRANCOUNT > 0`) so dropped Hub sessions do not leave open FAKIR/MAG transactions.
+- Unit tests for SQL session idle tracking (`SqlSessionIdleTracker`).
+
 ## [1.0.0] - 2026-06-18
 
 ### Added
