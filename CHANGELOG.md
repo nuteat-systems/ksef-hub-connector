@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-07-17
+
+### Fixed
+
+- Installer now includes sticky SQL session idle TTL and rollback-on-close (code was missing from the v1.0.1 tag).
+
+
+## [Unreleased]
+
 ## [1.0.1] - 2026-07-17
 
 ### Added
@@ -37,5 +46,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Access token is no longer stored in plain text in `connector.settings.json`.
 - Legacy plain-text tokens are migrated automatically on load and removed on save.
 
+[1.0.2]: https://github.com/nuteat-systems/ksef-hub-connector/releases/tag/v1.0.2
 [1.0.1]: https://github.com/nuteat-systems/ksef-hub-connector/releases/tag/v1.0.1
 [1.0.0]: https://github.com/nuteat-systems/ksef-hub-connector/releases/tag/v1.0.0
