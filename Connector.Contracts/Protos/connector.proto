@@ -64,6 +64,8 @@ message DbCommandRequest {
   TargetDatabase target_database = 5;
   string session_id = 6;
   bool close_session = 7;
+  // Optional catalog override from Hub (per-tenant WAPRO DB). Empty = local Mag/Fakir settings.
+  string database_name = 8;
 }
 
 message DbCommandResult {

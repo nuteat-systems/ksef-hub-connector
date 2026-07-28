@@ -18,6 +18,7 @@ public sealed class SqlDbExecutor : IDbExecutor, IAsyncDisposable
     private readonly bool _trustBackendCommands;
     private readonly SqlSessionIdleTracker _sessionIdleTracker;
     private readonly ConcurrentDictionary<string, SqlConnection> _sessions = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, string> _sessionConnectionStrings = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, SemaphoreSlim> _sessionLocks = new(StringComparer.Ordinal);
 
     public SqlDbExecutor(
@@ -113,7 +114,7 @@ public sealed class SqlDbExecutor : IDbExecutor, IAsyncDisposable
             }
 
             var settings = await _settingsStore.LoadAsync(cancellationToken);
-            var targetDb = ResolveTargetDatabase(request, settings.Database);
+            var targetDb = DbTargetResolver.Resolve(request.DatabaseName, (int)request.TargetDatabase, settings.Database);
             var connectionString = SqlConnectionStringFactory.Build(settings.Database, targetDb);
 
             var connection = await GetConnectionAsync(request.SessionId, connectionString, useSession, cancellationToken);
@@ -183,6 +184,13 @@ public sealed class SqlDbExecutor : IDbExecutor, IAsyncDisposable
 
         if (_sessions.TryGetValue(sessionId, out var existing) && existing.State == ConnectionState.Open)
         {
+            if (_sessionConnectionStrings.TryGetValue(sessionId, out var existingConnectionString) &&
+                !string.Equals(existingConnectionString, connectionString, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException(
+                    $"SQL session '{sessionId}' is already open against a different database catalog.");
+            }
+
             _sessionIdleTracker.Touch(sessionId);
             return existing;
         }
@@ -200,6 +208,7 @@ public sealed class SqlDbExecutor : IDbExecutor, IAsyncDisposable
                     .GetResult();
                 return connection;
             });
+        _sessionConnectionStrings[sessionId] = connectionString;
         _sessionIdleTracker.Touch(sessionId);
         return connection;
     }
@@ -271,6 +280,7 @@ public sealed class SqlDbExecutor : IDbExecutor, IAsyncDisposable
         }
 
         _sessionIdleTracker.Remove(sessionId);
+        _sessionConnectionStrings.TryRemove(sessionId, out _);
 
         if (!_sessions.TryRemove(sessionId, out var connection))
         {
@@ -331,13 +341,4 @@ public sealed class SqlDbExecutor : IDbExecutor, IAsyncDisposable
         };
     }
 
-    private static string ResolveTargetDatabase(DbCommandRequest request, DatabaseSettings settings)
-    {
-        return (int)request.TargetDatabase switch
-        {
-            2 when !string.IsNullOrWhiteSpace(settings.WaproFakirDatabase) => settings.WaproFakirDatabase,
-            1 when !string.IsNullOrWhiteSpace(settings.WaproMagDatabase) => settings.WaproMagDatabase,
-            _ => settings.GetPrimaryDatabase()
-        };
-    }
 }

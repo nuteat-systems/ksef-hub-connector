@@ -70,13 +70,13 @@
                     <TextBlock Grid.Row="1" Text="Port" Margin="0,6,8,6" />
                     <TextBox x:Name="DbPortTextBox" Grid.Row="1" Grid.Column="1" Margin="0,4,0,4" />
 
-                    <TextBlock Grid.Row="2" Text="Baza Wapro Mag" Margin="0,6,8,6" />
+                    <TextBlock Grid.Row="2" Text="Baza Wapro Mag (fallback)" Margin="0,6,8,6" />
                     <Grid Grid.Row="2" Grid.Column="1" Margin="0,4,0,4">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <ComboBox x:Name="DbWaproMagComboBox" IsEditable="True" />
+                        <ComboBox x:Name="DbWaproMagComboBox" IsEditable="True" ToolTip="Używana, gdy Hub nie prześle nazwy bazy. W SaaS nazwę bazy ustawia aplikacja per tenant." />
                         <Button Grid.Column="1"
                                 Margin="8,0,0,0"
                                 Padding="10,2"
@@ -84,8 +84,9 @@
                                 Click="LoadDatabasesButton_Click" />
                     </Grid>
 
-                    <TextBlock Grid.Row="3" Text="Baza Wapro Fakir" Margin="0,6,8,6" />
-                    <ComboBox x:Name="DbWaproFakirComboBox" Grid.Row="3" Grid.Column="1" IsEditable="True" Margin="0,4,0,4" />
+                    <TextBlock Grid.Row="3" Text="Baza Wapro Fakir (fallback)" Margin="0,6,8,6" />
+                    <ComboBox x:Name="DbWaproFakirComboBox" Grid.Row="3" Grid.Column="1" IsEditable="True" Margin="0,4,0,4"
+                              ToolTip="Używana, gdy Hub nie prześle nazwy bazy. W SaaS nazwę bazy ustawia aplikacja per tenant." />
 
                     <CheckBox x:Name="IntegratedSecurityCheckBox"
                               Grid.Row="4"
